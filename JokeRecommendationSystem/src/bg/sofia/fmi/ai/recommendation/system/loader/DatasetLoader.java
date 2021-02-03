@@ -47,7 +47,7 @@ public class DatasetLoader {
 				user.addRating(jokeId, rating + 10);
 				int currentJokeId = jokeId;
 				Joke joke = jokes.stream().filter(j -> j.getId() == currentJokeId).findFirst().get();
-				joke.addRating(userId, rating);
+				joke.addRating(userId, rating + 10);
 			}
 		}
 

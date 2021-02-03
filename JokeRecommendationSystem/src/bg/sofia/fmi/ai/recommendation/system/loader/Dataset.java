@@ -11,6 +11,7 @@ public class Dataset {
 	private List<User> testData;
 	private List<Joke> jokes;
 	private int jokesNumber;
+	private int usersNumber;
 
 	public Dataset(List<User> data, List<Joke> jokes) {
 		// @VK TODO we want to shuffle the data
@@ -21,6 +22,7 @@ public class Dataset {
 		testData = data.stream().skip(trainingDataLength).collect(Collectors.toList());
 		this.jokes = jokes;
 		jokesNumber = jokes.size();
+		usersNumber = data.size();
 	}
 
 	public List<User> getTrainingData() {
@@ -37,5 +39,9 @@ public class Dataset {
 
 	public int getJokesNumber() {
 		return jokesNumber;
+	}
+
+	public int getUsersNumber() {
+		return usersNumber;
 	}
 }

@@ -30,12 +30,12 @@ public class Joke {
 		return ratings;
 	}
 
-	public double calculateCosineSimilarity(Joke other, int jokesNumber) {
+	public double calculateCosineSimilarity(Joke other, int usersNumber) {
 		double dotProduct = 0.0;
 		double firstNorm = 0.0;
 		double secondNorm = 0.0;
 
-		for (int userId = 0; userId < jokesNumber; userId++) {
+		for (int userId = 0; userId < usersNumber; userId++) {
 			double firstCoordinate = this.getRatings().containsKey(userId) ? this.getRatings().get(userId) : 0.0;
 			double secondCoordinate = other.getRatings().containsKey(userId) ? other.getRatings().get(userId) : 0.0;
 

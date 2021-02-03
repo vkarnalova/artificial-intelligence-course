@@ -16,34 +16,62 @@ public class ItemBasedStrategy implements RecommendationStrategy {
 
 	@Override
 	public List<Pair<Joke, Double>> recommendJoke(User user) {
-		// TODO Auto-generated method stub
-		return null;
+
+		List<Pair<Joke, Double>> recommendedJokes = dataset.getJokes()
+				.stream()
+				.filter(j -> user.getRatings().get(j.getId()) == null)
+				.map(joke -> {
+					List<Pair<Joke, Double>> jokeNearestNeighbors = findKNearestNeighbors(joke, 2);
+					double rating = predictRatingForJoke(user, jokeNearestNeighbors);
+					return new Pair<Joke, Double>(joke, rating);
+				})
+				.sorted((firstRating, secondRating) -> Double.compare(secondRating.getValue(), firstRating.getValue()))
+				.limit(2)
+				.collect(Collectors.toList());
+
+		return recommendedJokes;
 	}
 
-	public List<Joke> findKNearestNeighbors(Joke joke, int nearestNeogborsNumber) {
-		int jokesNumber = dataset.getJokesNumber();
+	public double predictRatingForJoke(User user, List<Pair<Joke, Double>> jokeNearestNeighbors) {
+		double weightedRatingsSum = 0.0;
+		double weightsSum = 0.0;
+		for (Pair<Joke, Double> neighbor : jokeNearestNeighbors) {
+			Double rating = neighbor.getKey().getRatings().get(user.getId());
+
+			// filter out the jokes that the current user has not rated
+			if (rating != null) {
+				double similarity = neighbor.getValue();
+				weightedRatingsSum += rating * similarity;
+				weightsSum += similarity;
+			}
+		}
+		return weightedRatingsSum / weightsSum;
+	}
+
+	public List<Pair<Joke, Double>> findKNearestNeighbors(Joke joke, int nearestNeighborsNumber) {
+		// calculate similarities
+		List<Pair<Joke, Double>> similarities = calculateSimilarities(joke);
 
 		// sort in descending orders
-		List<Joke> sorted = dataset.getJokes()
-				.stream()
-				.filter(j -> j.getId() == joke.getId())
-				.sorted((firstJoke, secondJoke) -> {
-					return Double.compare(joke.calculateCosineSimilarity(firstJoke, jokesNumber),
-							joke.calculateCosineSimilarity(secondJoke, jokesNumber));
+		List<Pair<Joke, Double>> nearestNeighbors = similarities.stream()
+				.sorted((firstSimilarity, secondSimilarity) -> {
+					return Double.compare(secondSimilarity.getValue(), firstSimilarity.getValue());
 				})
+				.limit(nearestNeighborsNumber)
 				.collect(Collectors.toList());
 
-		return sorted.stream().limit(nearestNeogborsNumber).collect(Collectors.toList());
+		return nearestNeighbors;
 	}
 
-	public double predictRatingForJoke(User user, List<Joke> nearestNeighbors, int jokeId) {
-		// filter out the jokes that the user has not rated
-		List<Joke> ratedNeighbors = nearestNeighbors.stream()
-				.filter(joke -> user.getRatings().containsKey(joke.getId()))
-				.collect(Collectors.toList());
+	private List<Pair<Joke, Double>> calculateSimilarities(Joke joke) {
+		int usersNumber = dataset.getUsersNumber();
 
-		double sumRatings = ratedNeighbors.stream().mapToDouble(joke -> joke.getRatings().get(user.getId())).sum();
-		return sumRatings / ratedNeighbors.size();
+		return dataset.getJokes()
+				.stream()
+				.filter(j -> j.getId() != joke.getId())
+				.map(neighbor -> new Pair<Joke, Double>(neighbor,
+						joke.calculateCosineSimilarity(neighbor, usersNumber)))
+				.collect(Collectors.toList());
 	}
 
 }
