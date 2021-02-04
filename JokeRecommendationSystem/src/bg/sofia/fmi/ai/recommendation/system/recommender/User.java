@@ -25,19 +25,23 @@ public class User {
 	}
 
 	public double calculateCosineSimilarity(User other, int jokesNumber) {
+		return calculateCosineSimilarity(other.getRatings(), jokesNumber);
+	}
+
+	public double calculateCosineSimilarity(Map<Integer, Double> otherUserRatings, int jokesNumber) {
 		double dotProduct = 0.0;
 		double firstNorm = 0.0;
 		double secondNorm = 0.0;
 
 		for (int jokeId = 0; jokeId < jokesNumber; jokeId++) {
 			double firstCoordinate = this.getRatings().containsKey(jokeId) ? this.getRatings().get(jokeId) : 0.0;
-			double secondCoordinate = other.getRatings().containsKey(jokeId) ? other.getRatings().get(jokeId) : 0.0;
+			double secondCoordinate = otherUserRatings.containsKey(jokeId) ? otherUserRatings.get(jokeId) : 0.0;
 
 			dotProduct += firstCoordinate * secondCoordinate;
 			firstNorm += Math.pow(firstCoordinate, 2);
 			secondNorm += Math.pow(secondCoordinate, 2);
 		}
 
-		return dotProduct / (Math.sqrt(firstNorm) * Math.sqrt(secondNorm));
+		return dotProduct != 0.0 ? dotProduct / (Math.sqrt(firstNorm) * Math.sqrt(secondNorm)) : 0.0;
 	}
 }
