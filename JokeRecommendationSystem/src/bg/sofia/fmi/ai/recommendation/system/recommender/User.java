@@ -44,4 +44,15 @@ public class User {
 
 		return dotProduct != 0.0 ? dotProduct / (Math.sqrt(firstNorm) * Math.sqrt(secondNorm)) : 0.0;
 	}
+
+	public User createPartialCopy() {
+		User copiedUser = new User(this.id);
+
+		// Copy half of the ratings
+		ratings.entrySet().stream().limit(ratings.entrySet().size() / 2).forEach(entry -> {
+			copiedUser.getRatings().put(entry.getKey(), entry.getValue());
+		});
+
+		return copiedUser;
+	}
 }

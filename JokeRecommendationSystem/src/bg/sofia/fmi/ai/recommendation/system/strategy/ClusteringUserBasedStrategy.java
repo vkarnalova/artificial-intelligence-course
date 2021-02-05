@@ -3,20 +3,29 @@ package bg.sofia.fmi.ai.recommendation.system.strategy;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import bg.sofia.fmi.ai.recommendation.system.clustering.Centroid;
+import bg.sofia.fmi.ai.recommendation.system.clustering.ClustersGroup;
+import bg.sofia.fmi.ai.recommendation.system.clustering.KMeans;
 import bg.sofia.fmi.ai.recommendation.system.loader.Dataset;
 import bg.sofia.fmi.ai.recommendation.system.recommender.Joke;
 import bg.sofia.fmi.ai.recommendation.system.recommender.User;
 
-public class UserBasedStrategy implements RecommendationStrategy {
+public class ClusteringUserBasedStrategy extends UserBasedStrategy {
 	private Dataset dataset;
+	private ClustersGroup clusters;
 
-	public UserBasedStrategy(Dataset dataset) {
+	public ClusteringUserBasedStrategy(Dataset dataset) {
+		super(dataset);
 		this.dataset = dataset;
+		KMeans kMeans = new KMeans();
+		clusters = kMeans.calculateClusters(dataset.getTrainingData(), dataset.getJokesNumber(), 4, 60);
 	}
 
 	@Override
 	public List<Pair<Joke, Double>> recommendJoke(User user) {
-		List<Pair<User, Double>> neighbors = findKNearestNeighbors(user, 2);
+		Centroid centroid = clusters.findClusterForUser(user, dataset.getJokesNumber());
+		List<User> usersInCluster = clusters.getClusters().get(centroid);
+		List<Pair<User, Double>> neighbors = findKNearestNeighbors(user, usersInCluster, 2);
 
 		List<Pair<Joke, Double>> recommendedJokes = dataset.getJokes()
 				.stream()
@@ -32,24 +41,11 @@ public class UserBasedStrategy implements RecommendationStrategy {
 		return recommendedJokes;
 	}
 
-	public double predictRatingForJoke(List<Pair<User, Double>> nearestNeighbors, int jokeId) {
-		double weightedRatingsSum = 0.0;
-		double weightsSum = 0.0;
-		for (Pair<User, Double> neighbor : nearestNeighbors) {
-			Double rating = neighbor.getKey().getRatings().get(jokeId);
-			if (rating != null) {
-				double similarity = neighbor.getValue();
-				weightedRatingsSum += rating * similarity;
-				weightsSum += similarity;
-			}
-		}
-		return weightedRatingsSum != 0.0 ? weightedRatingsSum / weightsSum : 0.0;
-	}
-
-	public List<Pair<User, Double>> findKNearestNeighbors(User user, int nearestNeighborsNumber) {
+	public List<Pair<User, Double>> findKNearestNeighbors(User user, List<User> usersInCluster,
+			int nearestNeighborsNumber) {
 
 		// calculate cosine similarities;
-		List<Pair<User, Double>> similarities = calculateSimilarities(user, dataset.getTrainingData());
+		List<Pair<User, Double>> similarities = calculateSimilarities(user, usersInCluster);
 
 		// sort in descending order
 		List<Pair<User, Double>> nearestNeighbors = similarities.stream()
@@ -59,16 +55,6 @@ public class UserBasedStrategy implements RecommendationStrategy {
 				.collect(Collectors.toList());
 
 		return nearestNeighbors;
-	}
-
-	protected List<Pair<User, Double>> calculateSimilarities(User user, List<User> users) {
-		int jokesNumber = dataset.getJokesNumber();
-
-		List<Pair<User, Double>> similarities = users.stream()
-				.map(neighbor -> new Pair<User, Double>(neighbor,
-						user.calculateCosineSimilarity(neighbor, jokesNumber)))
-				.collect(Collectors.toList());
-		return similarities;
 	}
 
 }

@@ -26,9 +26,11 @@ public class KMeans {
 				currentClusters.addUserToCluster(user, nearestCentroid);
 			}
 
-			// if the clusters haven't change -> terminate
+			// if the clusters haven't change -> restart
 			if (currentClusters.equals(previousClusters)) {
-				break;
+				centroids = generateRandomCentroids(users, jokesNumber, clustersNumber);
+				currentClusters = new ClustersGroup();
+				currentClusters.addClusters(centroids);
 			}
 
 			previousClusters = currentClusters;

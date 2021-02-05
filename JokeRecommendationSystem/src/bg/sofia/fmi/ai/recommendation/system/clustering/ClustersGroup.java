@@ -44,6 +44,21 @@ public class ClustersGroup {
 		return cost;
 	}
 
+	public Centroid findClusterForUser(User user, int jokesNumber) {
+		double maxSimilarity = Double.MIN_VALUE;
+		Centroid nearestCentroid = null;
+
+		for (Centroid centroid : clusters.keySet()) {
+			double currentSimilarity = user.calculateCosineSimilarity(centroid.getRatings(), jokesNumber);
+			if (currentSimilarity > maxSimilarity) {
+				maxSimilarity = currentSimilarity;
+				nearestCentroid = centroid;
+			}
+		}
+
+		return nearestCentroid != null ? nearestCentroid : clusters.keySet().iterator().next();
+	}
+
 	private double evaluateCost() {
 		double cost = 0.0;
 		for (Centroid centroid : clusters.keySet()) {

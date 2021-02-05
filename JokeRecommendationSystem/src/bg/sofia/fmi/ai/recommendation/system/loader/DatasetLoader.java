@@ -1,6 +1,8 @@
 package bg.sofia.fmi.ai.recommendation.system.loader;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,10 +46,11 @@ public class DatasetLoader {
 			Double rating = Double.parseDouble(split[jokeId + 1]);
 			if (rating != 99) {
 				// @VK TODO maybe 10 should be a constant somewhere
-				user.addRating(jokeId, rating + 10);
+				rating = new BigDecimal(rating + 10).setScale(2, RoundingMode.HALF_UP).doubleValue();
+				user.addRating(jokeId, rating);
 				int currentJokeId = jokeId;
 				Joke joke = jokes.stream().filter(j -> j.getId() == currentJokeId).findFirst().get();
-				joke.addRating(userId, rating + 10);
+				joke.addRating(userId, rating);
 			}
 		}
 
