@@ -15,21 +15,44 @@ public class ItemBasedStrategy implements RecommendationStrategy {
 	}
 
 	@Override
-	public List<Pair<Joke, Double>> recommendJoke(User user) {
+	public List<Pair<Joke, Double>> recommendNewJoke(User user, int jokesNumber) {
 
 		List<Pair<Joke, Double>> recommendedJokes = dataset.getJokes()
 				.stream()
 				.filter(j -> user.getRatings().get(j.getId()) == null)
 				.map(joke -> {
-					List<Pair<Joke, Double>> jokeNearestNeighbors = findKNearestNeighbors(joke, 2);
+					List<Pair<Joke, Double>> jokeNearestNeighbors = findKNearestNeighbors(joke, NEIGHBORS_NUMBER);
 					double rating = predictRatingForJoke(user, jokeNearestNeighbors);
 					return new Pair<Joke, Double>(joke, rating);
 				})
 				.sorted((firstRating, secondRating) -> Double.compare(secondRating.getValue(), firstRating.getValue()))
-				.limit(2)
+				.limit(jokesNumber)
 				.collect(Collectors.toList());
 
 		return recommendedJokes;
+	}
+
+	@Override
+	public List<Pair<Joke, Double>> recommendJoke(User user, int jokesNumber) {
+
+		List<Pair<Joke, Double>> jokes = dataset.getJokes().stream().map(joke -> {
+			List<Pair<Joke, Double>> jokeNearestNeighbors = findKNearestNeighbors(joke, NEIGHBORS_NUMBER);
+			double rating = predictRatingForJoke(user, jokeNearestNeighbors);
+			return new Pair<Joke, Double>(joke, rating);
+		}).collect(Collectors.toList());
+		List<Pair<Joke, Double>> recommendedJokes = jokes.stream()
+				.sorted((firstRating, secondRating) -> Double.compare(secondRating.getValue(), firstRating.getValue()))
+				.limit(jokesNumber)
+				.collect(Collectors.toList());
+
+		return recommendedJokes;
+	}
+
+	@Override
+	public double predictRatingForJoke(User user, int jokeId) {
+		Joke joke = dataset.getJokes().stream().filter(j -> j.getId() == jokeId).findFirst().get();
+		List<Pair<Joke, Double>> jokeNearestNeighbors = findKNearestNeighbors(joke, NEIGHBORS_NUMBER);
+		return predictRatingForJoke(user, jokeNearestNeighbors);
 	}
 
 	public double predictRatingForJoke(User user, List<Pair<Joke, Double>> jokeNearestNeighbors) {
@@ -45,10 +68,14 @@ public class ItemBasedStrategy implements RecommendationStrategy {
 				weightsSum += similarity;
 			}
 		}
-		return weightedRatingsSum / weightsSum;
+		return weightedRatingsSum != 0.0 ? weightedRatingsSum / weightsSum : 0.0;
 	}
 
 	public List<Pair<Joke, Double>> findKNearestNeighbors(Joke joke, int nearestNeighborsNumber) {
+		if (joke.getNearestNeighbors() != null) {
+			return joke.getNearestNeighbors();
+		}
+
 		// calculate similarities
 		List<Pair<Joke, Double>> similarities = calculateSimilarities(joke);
 
@@ -59,6 +86,7 @@ public class ItemBasedStrategy implements RecommendationStrategy {
 				})
 				.limit(nearestNeighborsNumber)
 				.collect(Collectors.toList());
+		joke.setNearestNeighbors(nearestNeighbors);
 
 		return nearestNeighbors;
 	}

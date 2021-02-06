@@ -1,5 +1,6 @@
 package bg.sofia.fmi.ai.recommendation.system.loader;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,7 +16,7 @@ public class Dataset {
 
 	public Dataset(List<User> data, List<Joke> jokes) {
 		// @VK TODO we want to shuffle the data
-		// Collections.shuffle(data);
+		Collections.shuffle(data);
 
 		int trainingDataLength = (int) (data.size() * 0.9);
 		trainingData = data.stream().limit(trainingDataLength).collect(Collectors.toList());

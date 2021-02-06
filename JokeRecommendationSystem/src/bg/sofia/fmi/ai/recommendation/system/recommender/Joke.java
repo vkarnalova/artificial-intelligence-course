@@ -1,12 +1,16 @@
 package bg.sofia.fmi.ai.recommendation.system.recommender;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import bg.sofia.fmi.ai.recommendation.system.strategy.Pair;
 
 public class Joke {
 	private int id;
 	private String text;
 	private Map<Integer, Double> ratings; // userId -> rating
+	List<Pair<Joke, Double>> nearestNeighbors;
 
 	public Joke(int id, String text) {
 		this.id = id;
@@ -30,6 +34,14 @@ public class Joke {
 		return ratings;
 	}
 
+	public List<Pair<Joke, Double>> getNearestNeighbors() {
+		return nearestNeighbors;
+	}
+
+	public void setNearestNeighbors(List<Pair<Joke, Double>> nearestNeighbors) {
+		this.nearestNeighbors = nearestNeighbors;
+	}
+
 	public double calculateCosineSimilarity(Joke other, int usersNumber) {
 		double dotProduct = 0.0;
 		double firstNorm = 0.0;
@@ -44,7 +56,7 @@ public class Joke {
 			secondNorm += Math.pow(secondCoordinate, 2);
 		}
 
-		return dotProduct / (Math.sqrt(firstNorm) * Math.sqrt(secondNorm));
+		return dotProduct != 0.0 ? dotProduct / (Math.sqrt(firstNorm) * Math.sqrt(secondNorm)) : 0.0;
 	}
 
 }

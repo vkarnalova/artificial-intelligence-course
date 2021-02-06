@@ -11,6 +11,7 @@ import bg.sofia.fmi.ai.recommendation.system.loader.Dataset;
 import bg.sofia.fmi.ai.recommendation.system.loader.DatasetLoader;
 import bg.sofia.fmi.ai.recommendation.system.recommender.Joke;
 import bg.sofia.fmi.ai.recommendation.system.recommender.Recommender;
+import bg.sofia.fmi.ai.recommendation.system.recommender.RecommenderTest;
 import bg.sofia.fmi.ai.recommendation.system.recommender.User;
 import bg.sofia.fmi.ai.recommendation.system.strategy.Pair;
 import bg.sofia.fmi.ai.recommendation.system.strategy.RecommendationStrategyType;
@@ -55,7 +56,11 @@ public class Main {
 				}
 
 			} else if (mode.equals("2")) {
-				//
+				RecommenderTest recommenderTest = new RecommenderTest();
+				System.out.println("RMSE tests:");
+				recommenderTest.calculateRMSE(dataset);
+				System.out.println("Hit rate tests:");
+				recommenderTest.calculateHitRate(dataset);
 			} else {
 				System.out.println("Invalid input");
 			}

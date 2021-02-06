@@ -45,7 +45,6 @@ public class DatasetLoader {
 		for (int jokeId = 0; jokeId < split.length - 1; jokeId++) {
 			Double rating = Double.parseDouble(split[jokeId + 1]);
 			if (rating != 99) {
-				// @VK TODO maybe 10 should be a constant somewhere
 				rating = new BigDecimal(rating + 10).setScale(2, RoundingMode.HALF_UP).doubleValue();
 				user.addRating(jokeId, rating);
 				int currentJokeId = jokeId;

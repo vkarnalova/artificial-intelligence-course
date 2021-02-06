@@ -15,8 +15,8 @@ public class UserBasedStrategy implements RecommendationStrategy {
 	}
 
 	@Override
-	public List<Pair<Joke, Double>> recommendJoke(User user) {
-		List<Pair<User, Double>> neighbors = findKNearestNeighbors(user, 2);
+	public List<Pair<Joke, Double>> recommendNewJoke(User user, int jokesNumber) {
+		List<Pair<User, Double>> neighbors = findKNearestNeighbors(user, NEIGHBORS_NUMBER);
 
 		List<Pair<Joke, Double>> recommendedJokes = dataset.getJokes()
 				.stream()
@@ -26,10 +26,31 @@ public class UserBasedStrategy implements RecommendationStrategy {
 					return new Pair<Joke, Double>(joke, rating);
 				})
 				.sorted((firstRating, secondRating) -> Double.compare(secondRating.getValue(), firstRating.getValue()))
-				.limit(2)
+				.limit(jokesNumber)
 				.collect(Collectors.toList());
 
 		return recommendedJokes;
+	}
+
+	@Override
+	public List<Pair<Joke, Double>> recommendJoke(User user, int jokesNumber) {
+		List<Pair<User, Double>> neighbors = findKNearestNeighbors(user, NEIGHBORS_NUMBER);
+
+		List<Pair<Joke, Double>> recommendedJokes = dataset.getJokes().stream().map(joke -> {
+			double rating = predictRatingForJoke(neighbors, joke.getId());
+			return new Pair<Joke, Double>(joke, rating);
+		})
+				.sorted((firstRating, secondRating) -> Double.compare(secondRating.getValue(), firstRating.getValue()))
+				.limit(jokesNumber)
+				.collect(Collectors.toList());
+
+		return recommendedJokes;
+	}
+
+	@Override
+	public double predictRatingForJoke(User user, int jokeId) {
+		List<Pair<User, Double>> neighbors = findKNearestNeighbors(user, NEIGHBORS_NUMBER);
+		return predictRatingForJoke(neighbors, jokeId);
 	}
 
 	public double predictRatingForJoke(List<Pair<User, Double>> nearestNeighbors, int jokeId) {

@@ -25,7 +25,7 @@ public class Recommender {
 	public List<Pair<Joke, Double>> recommendJoke(User user, RecommendationStrategyType strategyType) {
 		RecommendationStrategy strategy = strategies.get(strategyType);
 
-		return strategy.recommendJoke(user);
+		return strategy.recommendNewJoke(user, 2);
 	}
 
 }

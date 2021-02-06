@@ -22,10 +22,10 @@ public class ClusteringUserBasedStrategy extends UserBasedStrategy {
 	}
 
 	@Override
-	public List<Pair<Joke, Double>> recommendJoke(User user) {
+	public List<Pair<Joke, Double>> recommendNewJoke(User user, int jokesNumber) {
 		Centroid centroid = clusters.findClusterForUser(user, dataset.getJokesNumber());
 		List<User> usersInCluster = clusters.getClusters().get(centroid);
-		List<Pair<User, Double>> neighbors = findKNearestNeighbors(user, usersInCluster, 2);
+		List<Pair<User, Double>> neighbors = findKNearestNeighbors(user, usersInCluster, NEIGHBORS_NUMBER);
 
 		List<Pair<Joke, Double>> recommendedJokes = dataset.getJokes()
 				.stream()
@@ -35,10 +35,35 @@ public class ClusteringUserBasedStrategy extends UserBasedStrategy {
 					return new Pair<Joke, Double>(joke, rating);
 				})
 				.sorted((firstRating, secondRating) -> Double.compare(secondRating.getValue(), firstRating.getValue()))
-				.limit(2)
+				.limit(jokesNumber)
 				.collect(Collectors.toList());
 
 		return recommendedJokes;
+	}
+
+	@Override
+	public List<Pair<Joke, Double>> recommendJoke(User user, int jokesNumber) {
+		Centroid centroid = clusters.findClusterForUser(user, dataset.getJokesNumber());
+		List<User> usersInCluster = clusters.getClusters().get(centroid);
+		List<Pair<User, Double>> neighbors = findKNearestNeighbors(user, usersInCluster, NEIGHBORS_NUMBER);
+
+		List<Pair<Joke, Double>> recommendedJokes = dataset.getJokes().stream().map(joke -> {
+			double rating = predictRatingForJoke(neighbors, joke.getId());
+			return new Pair<Joke, Double>(joke, rating);
+		})
+				.sorted((firstRating, secondRating) -> Double.compare(secondRating.getValue(), firstRating.getValue()))
+				.limit(jokesNumber)
+				.collect(Collectors.toList());
+
+		return recommendedJokes;
+	}
+
+	@Override
+	public double predictRatingForJoke(User user, int jokeId) {
+		Centroid centroid = clusters.findClusterForUser(user, dataset.getJokesNumber());
+		List<User> usersInCluster = clusters.getClusters().get(centroid);
+		List<Pair<User, Double>> neighbors = findKNearestNeighbors(user, usersInCluster, NEIGHBORS_NUMBER);
+		return predictRatingForJoke(neighbors, jokeId);
 	}
 
 	public List<Pair<User, Double>> findKNearestNeighbors(User user, List<User> usersInCluster,
